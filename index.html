@@ -7,72 +7,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      updateDoc,
-      doc,
-      onSnapshot,
-      query,
-      where,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAfkl5nqHc2ABz3VKi081KOLG8T0D8_Yh8",
-      authDomain: "order-pickup-a12f2.firebaseapp.com",
-      projectId: "order-pickup-a12f2",
-      storageBucket: "order-pickup-a12f2.firebasestorage.app",
-      messagingSenderId: "132551215111",
-      appId: "1:132551215111:web:9fab5609db392fe6edc2a2"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    window.firebaseApp = { auth, db };
-  </script>
   <style>
     :root {
       --primary: #4f46e5;
-      --primary-light: #818cf8;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
-      --gray-100: #f9fafb;
-      --gray-200: #e5e7eb;
-      --gray-700: #374151;
-      --card-bg: #ffffff;
       --body-bg: #f8fafc;
+      --card-bg: #ffffff;
       --text: #1f2937;
       --radius: 16px;
       --shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
-
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--body-bg);
       color: var(--text);
     }
-
     .navbar-brand {
       font-weight: 700;
-      font-size: 1.5rem;
       color: var(--primary) !important;
     }
-
     .card {
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -80,24 +35,17 @@
       background: var(--card-bg);
       transition: all 0.3s ease;
     }
-
     .card:hover {
       transform: translateY(-4px);
       box-shadow: 0 6px 24px rgba(0,0,0,0.08);
     }
-
     .card-header {
       background: linear-gradient(120deg, var(--primary), #7c3aed);
       color: white;
       padding: 1.25rem 1.5rem;
       font-weight: 600;
     }
-
-    .btn-primary {
-      background: var(--primary);
-      border: none;
-    }
-
+    .btn-primary { background: var(--primary); border: none; }
     .status-badge {
       display: inline-block;
       padding: 0.35rem 0.85rem;
@@ -105,15 +53,10 @@
       font-size: 0.85rem;
       font-weight: 600;
     }
-
     .status-pending { background: #fef3c7; color: #d97706; }
-    .status-on_way_pickup { background: #dbeafe; color: #1d4ed8; }
     .status-picked_up { background: #dcfce7; color: #16a34a; }
-    .status-on_way_delivery { background: #d1fae5; color: #0d9488; }
-    .status-delivered { background: #dcfce7; color: #16a34a; }
+    .status-delivered { background: #dcfce7; color: #16a34a; font-weight: 700; }
     .status-cancelled { background: #fee2e2; color: #dc2626; }
-    .status-returned { background: #ffedd5; color: #ea580c; }
-
     .role-tag {
       position: absolute;
       top: 16px;
@@ -124,48 +67,40 @@
       font-weight: 700;
       color: white;
     }
-
     .role-admin { background: #8b5cf6; }
     .role-client { background: #10b981; }
-
     .btn-status {
-      min-width: 120px;
+      min-width: 110px;
       margin: 0.3rem;
       font-size: 0.85rem;
       border: none;
       color: white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
     .auth-container {
       max-width: 480px;
       margin: 60px auto;
     }
-
     .form-control {
       padding: 0.75rem 1rem;
       border-radius: 12px;
-      border: 1px solid var(--gray-200);
+      border: 1px solid #e5e7eb;
     }
-
     .form-control:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
       outline: none;
     }
-
     .no-orders {
       text-align: center;
       padding: 3rem 1rem;
       color: #6b7280;
     }
-
     .order-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 24px;
     }
-
     @media (max-width: 768px) {
       .order-grid { grid-template-columns: 1fr; }
     }
@@ -185,7 +120,6 @@
   <div class="container py-5">
     <!-- Auth Section -->
     <div id="authSection" class="auth-container">
-      <!-- LOGIN TAB -->
       <div id="loginTab" class="card">
         <div class="card-header text-center">Sign In</div>
         <div class="card-body p-4">
@@ -204,7 +138,6 @@
         </div>
       </div>
 
-      <!-- REGISTER TAB -->
       <div id="registerTab" class="card d-none">
         <div class="card-header text-center">Create Account</div>
         <div class="card-body p-4">
@@ -221,11 +154,10 @@
         </div>
       </div>
 
-      <!-- RESET TAB -->
       <div id="resetTab" class="card d-none">
         <div class="card-header text-center">Reset Password</div>
         <div class="card-body p-4">
-          <p class="text-muted mb-3">Enter your email and we'll send you a link to reset your password.</p>
+          <p class="text-muted mb-3">Enter your email for a reset link.</p>
           <div class="mb-3">
             <input type="email" id="resetEmail" class="form-control" placeholder="Email">
           </div>
@@ -237,7 +169,7 @@
       </div>
     </div>
 
-    <!-- Orders Section -->
+    <!-- Orders -->
     <div id="ordersSection" class="d-none">
       <div class="d-flex justify-content-between align-items-center mb-5">
         <h2 class="fw-bold">My Orders</h2>
@@ -289,10 +221,49 @@
     </div>
   </div>
 
+  <!-- Bootstrap Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- Firebase Modular SDK -->
   <script type="module">
-    const { auth, db } = window.firebaseApp;
+    // ✅ CORRECT IMPORTS FOR MODULAR SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      updateDoc,
+      doc,
+      onSnapshot,
+      query,
+      where,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // ✅ YOUR CONFIG — NO CHANGES NEEDED
+    const firebaseConfig = {
+      apiKey: "AIzaSyAfkl5nqHc2ABz3VKi081KOLG8T0D8_Yh8",
+      authDomain: "order-pickup-a12f2.firebaseapp.com",
+      projectId: "order-pickup-a12f2",
+      storageBucket: "order-pickup-a12f2.firebasestorage.app",
+      messagingSenderId: "132551215111",
+      appId: "1:132551215111:web:9fab5609db392fe6edc2a2"
+    };
+
+    // ✅ INITIALIZE FIREBASE
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM
     const authSection = document.getElementById('authSection');
     const ordersSection = document.getElementById('ordersSection');
     const ordersContainer = document.getElementById('ordersContainer');
@@ -300,28 +271,17 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const addOrderBtn = document.getElementById('addOrderBtn');
 
-    // Auth tabs
+    // Tabs
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
     const resetTab = document.getElementById('resetTab');
-    const showRegister = document.getElementById('showRegister');
-    const showReset = document.getElementById('showReset');
-    const showLoginFromRegister = document.getElementById('showLoginFromRegister');
-    const showLoginFromReset = document.getElementById('showLoginFromReset');
 
-    // Login
+    // Inputs
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
-    const loginBtn = document.getElementById('loginBtn');
-
-    // Register
     const registerEmail = document.getElementById('registerEmail');
     const registerPassword = document.getElementById('registerPassword');
-    const registerBtn = document.getElementById('registerBtn');
-
-    // Reset
     const resetEmail = document.getElementById('resetEmail');
-    const resetBtn = document.getElementById('resetBtn');
 
     let currentUser = null;
     let isAdmin = false;
@@ -331,76 +291,74 @@
     document.getElementById('pickupDate').value = today;
     document.getElementById('deliveryDate').value = today;
 
-    // Tab navigation
-    showRegister.addEventListener('click', () => {
+    // Tab switching
+    document.getElementById('showRegister').onclick = () => {
       loginTab.classList.add('d-none');
       registerTab.classList.remove('d-none');
-    });
-    showReset.addEventListener('click', () => {
+    };
+    document.getElementById('showReset').onclick = () => {
       loginTab.classList.add('d-none');
       resetTab.classList.remove('d-none');
-    });
-    showLoginFromRegister.addEventListener('click', () => {
+    };
+    document.getElementById('showLoginFromRegister').onclick = () => {
       registerTab.classList.add('d-none');
       loginTab.classList.remove('d-none');
-    });
-    showLoginFromReset.addEventListener('click', () => {
+    };
+    document.getElementById('showLoginFromReset').onclick = () => {
       resetTab.classList.add('d-none');
       loginTab.classList.remove('d-none');
-    });
+    };
 
-    // Login
-    loginBtn.addEventListener('click', async () => {
+    // ✅ LOGIN — CORRECT MODULAR CALL
+    document.getElementById('loginBtn').onclick = async () => {
       const email = loginEmail.value.trim();
       const password = loginPassword.value;
-      if (!email || !password) return alert('Please fill all fields.');
+      if (!email || !password) return alert('Fill all fields.');
       try {
         await signInWithEmailAndPassword(auth, email, password);
       } catch (err) {
         alert('Login failed: ' + err.message);
       }
-    });
+    };
 
-    // Register
-    registerBtn.addEventListener('click', async () => {
+    // ✅ REGISTER
+    document.getElementById('registerBtn').onclick = async () => {
       const email = registerEmail.value.trim();
       const password = registerPassword.value;
       if (!email || !password || password.length < 6) {
-        return alert('Email and password (min 6 chars) required.');
+        return alert('Email and password (6+ chars) required.');
       }
       try {
         await createUserWithEmailAndPassword(auth, email, password);
-        // Auto-login after register
         alert('Account created! You are now signed in.');
       } catch (err) {
         alert('Registration failed: ' + err.message);
       }
-    });
+    };
 
-    // Password Reset
-    resetBtn.addEventListener('click', async () => {
+    // ✅ PASSWORD RESET
+    document.getElementById('resetBtn').onclick = async () => {
       const email = resetEmail.value.trim();
-      if (!email) return alert('Please enter your email.');
+      if (!email) return alert('Enter your email.');
       try {
         await sendPasswordResetEmail(auth, email);
-        alert('Password reset email sent! Check your inbox.');
+        alert('Reset email sent! Check inbox & spam.');
         resetTab.classList.add('d-none');
         loginTab.classList.remove('d-none');
       } catch (err) {
         alert('Reset failed: ' + err.message);
       }
-    });
+    };
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
+    logoutBtn.onclick = () => signOut(auth);
 
     // Modal
-    addOrderBtn.addEventListener('click', () => {
+    addOrderBtn.onclick = () => {
       new bootstrap.Modal(document.getElementById('addOrderModal')).show();
-    });
+    };
 
     // Save Order
-    const saveOrderBtn = document.getElementById('saveOrderBtn');
-    saveOrderBtn.addEventListener('click', async () => {
+    document.getElementById('saveOrderBtn').onclick = async () => {
       const pickupPlace = document.getElementById('pickupPlace').value.trim();
       const pickupDate = document.getElementById('pickupDate').value;
       const pickupTime = document.getElementById('pickupTime').value;
@@ -409,7 +367,7 @@
       const clientName = document.getElementById('clientName').value.trim();
 
       if (!pickupPlace || !pickupDate || !pickupTime || !deliveryDate || !deliveryTime || !clientName) {
-        return alert('All fields are required.');
+        return alert('All fields required.');
       }
 
       try {
@@ -425,36 +383,26 @@
           createdBy: currentUser.email
         });
         bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
+        // Reset form
         document.querySelectorAll('#addOrderModal input').forEach(el => el.value = '');
         document.getElementById('pickupDate').value = today;
         document.getElementById('deliveryDate').value = today;
       } catch (err) {
         alert('Error: ' + err.message);
       }
-    });
+    };
 
-    // Update status
-    function attachListeners() {
-      document.querySelectorAll('.status-btn').forEach(btn => {
-        btn.onclick = async () => {
-          const orderId = btn.dataset.orderId;
-          const status = btn.dataset.status;
-          await updateDoc(doc(db, 'orders', orderId), { status, updatedAt: new Date() });
-        };
-      });
-    }
-
+    // Render orders
     function renderOrder(order, id) {
       const statusMap = {
         pending: 'Pending',
-        on_way_pickup: 'On Way to Pickup',
+        on_way_pickup: 'On Way',
         picked_up: 'Picked Up',
-        on_way_delivery: 'On Way to Delivery',
+        on_way_delivery: 'To Delivery',
         delivered: 'Delivered',
         cancelled: 'Cancelled',
         returned: 'Returned'
       };
-
       const statusClass = `status-${order.status}`;
       const roleTag = isAdmin ? 'role-admin' : 'role-client';
 
@@ -467,15 +415,14 @@
           <p><strong>Client:</strong> ${order.clientName}</p>
           <p><strong>Pickup:</strong> ${order.pickupPlace} • ${order.pickupDate} at ${order.pickupTime}</p>
           <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusMap[order.status]}</span></p>
-          ${renderButtons(order.status, id)}
+          <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusMap[order.status] || order.status}</span></p>
+          ${isAdmin ? renderStatusButtons(order.status, id) : ''}
         </div>
       `;
       ordersContainer.appendChild(card);
     }
 
-    function renderButtons(status, id) {
-      if (!isAdmin) return '';
+    function renderStatusButtons(status, id) {
       const actions = [
         { s: 'on_way_pickup', l: 'On Way' },
         { s: 'picked_up', l: 'Picked Up' },
@@ -486,34 +433,30 @@
       ];
       let html = '<div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">';
       actions.forEach(a => {
-        html += `<button class="btn btn-sm btn-status status-btn"
-                 style="background:${getStatusColor(a.s)};color:white"
-                 data-order-id="${id}" data-status="${a.s}">${a.l}</button>`;
+        const color = a.s === 'cancelled' ? '#ef4444' : a.s === 'returned' ? '#f97316' : '#4f46e5';
+        html += `<button class="btn btn-sm btn-status"
+                 style="background:${color};color:white"
+                 onclick="updateStatus('${id}', '${a.s}')">${a.l}</button>`;
       });
       html += '</div>';
       return html;
     }
 
-    function getStatusColor(status) {
-      const colors = {
-        on_way_pickup: '#3b82f6',
-        picked_up: '#10b981',
-        on_way_delivery: '#0d9488',
-        delivered: '#059669',
-        cancelled: '#ef4444',
-        returned: '#f97316'
-      };
-      return colors[status] || '#6366f1';
-    }
+    // Global function for status update (since onclick in HTML)
+    window.updateStatus = async (orderId, status) => {
+      try {
+        await updateDoc(doc(db, 'orders', orderId), { status, updatedAt: new Date() });
+      } catch (err) {
+        alert('Update failed: ' + err.message);
+      }
+    };
 
     function loadOrders() {
       ordersContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-      let q;
-      if (isAdmin) {
-        q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
-      } else {
-        q = query(collection(db, 'orders'), where('createdBy', '==', currentUser.email), orderBy('createdAt', 'desc'));
-      }
+      const q = isAdmin
+        ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
+        : query(collection(db, 'orders'), where('createdBy', '==', currentUser.email), orderBy('createdAt', 'desc'));
+
       onSnapshot(q, (snapshot) => {
         ordersContainer.innerHTML = '';
         if (snapshot.empty) {
@@ -521,18 +464,18 @@
             <div class="col-12">
               <div class="no-orders">
                 <i class="bi bi-inbox" style="font-size:3rem;color:#d1d5db"></i>
-                <h5 class="mt-3">No orders found</h5>
+                <h5 class="mt-3">No orders</h5>
               </div>
             </div>`;
           return;
         }
         snapshot.forEach(doc => renderOrder(doc.data(), doc.id));
-        attachListeners();
       }, err => {
         ordersContainer.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
       });
     }
 
+    // Auth state
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
@@ -546,10 +489,9 @@
         authSection.classList.remove('d-none');
         ordersSection.classList.add('d-none');
         userRoleDisplay.textContent = '';
-        // Reset tabs to login
+        loginTab.classList.remove('d-none');
         registerTab.classList.add('d-none');
         resetTab.classList.add('d-none');
-        loginTab.classList.remove('d-none');
       }
     });
   </script>
