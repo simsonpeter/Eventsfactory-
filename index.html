@@ -2,498 +2,246 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LL Parcels — Order Manager</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #4f46e5;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --body-bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #1f2937;
-      --radius: 16px;
-      --shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--body-bg);
-      color: var(--text);
-    }
-    .navbar-brand {
-      font-weight: 700;
-      color: var(--primary) !important;
-    }
-    .card {
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: none;
-      background: var(--card-bg);
-      transition: all 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
-    }
-    .card-header {
-      background: linear-gradient(120deg, var(--primary), #7c3aed);
-      color: white;
-      padding: 1.25rem 1.5rem;
-      font-weight: 600;
-    }
-    .btn-primary { background: var(--primary); border: none; }
-    .status-badge {
-      display: inline-block;
-      padding: 0.35rem 0.85rem;
-      border-radius: 50px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-    .status-pending { background: #fef3c7; color: #d97706; }
-    .status-picked_up { background: #dcfce7; color: #16a34a; }
-    .status-delivered { background: #dcfce7; color: #16a34a; font-weight: 700; }
-    .status-cancelled { background: #fee2e2; color: #dc2626; }
-    .role-tag {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      font-size: 0.75rem;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 700;
-      color: white;
-    }
-    .role-admin { background: #8b5cf6; }
-    .role-client { background: #10b981; }
-    .btn-status {
-      min-width: 110px;
-      margin: 0.3rem;
-      font-size: 0.85rem;
-      border: none;
-      color: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .auth-container {
-      max-width: 480px;
-      margin: 60px auto;
-    }
-    .form-control {
-      padding: 0.75rem 1rem;
-      border-radius: 12px;
-      border: 1px solid #e5e7eb;
-    }
-    .form-control:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-      outline: none;
-    }
-    .no-orders {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: #6b7280;
-    }
-    .order-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px;
-    }
-    @media (max-width: 768px) {
-      .order-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Events Factory — Crew Orders & Calendar</title>
+  <meta name="description" content="Managers issue orders to crew. Calendar and board for live-event production." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2311161c'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='14' font-family='Georgia' fill='%23d4af37'%3EEF%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-    <div class="container">
-      <a class="navbar-brand" href="#"><i class="bi bi-box-seam me-2"></i>LL Parcels</a>
-      <div class="d-flex align-items-center">
-        <span id="userRoleDisplay" class="me-3 text-primary fw-medium"></span>
-        <button id="logoutBtn" class="btn btn-sm text-muted">Logout</button>
+  <div id="login-screen" class="login-screen">
+    <div class="login-panel">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">EF</span>
+        <div>
+          <p class="eyebrow">Production desk</p>
+          <h1>Events Factory</h1>
+        </div>
+      </div>
+      <p class="login-lede">Managers issue orders. Crew sees them on the calendar and gets them done.</p>
+
+      <form id="login-form" class="login-form" autocomplete="on">
+        <label>
+          Email
+          <input id="login-email" type="email" name="email" placeholder="you@eventsfactory.studio" required />
+        </label>
+        <label>
+          Password
+          <input id="login-password" type="password" name="password" placeholder="Password" required />
+        </label>
+        <p id="login-error" class="form-error" hidden></p>
+        <button type="submit" class="btn btn-gold">Sign in</button>
+      </form>
+
+      <div class="demo-block">
+        <p class="demo-label">Try a demo desk</p>
+        <div id="demo-accounts" class="demo-accounts"></div>
       </div>
     </div>
-  </nav>
+    <aside class="login-aside">
+      <p class="aside-kicker">How the floor works</p>
+      <h2>One calendar for every call sheet.</h2>
+      <ul class="aside-list">
+        <li><strong>Managers</strong> create events and assign orders to people.</li>
+        <li><strong>Crew</strong> open the day, take the order, mark it done.</li>
+        <li>Weddings, summits, galleries — the same board, color-coded by person.</li>
+      </ul>
+    </aside>
+  </div>
 
-  <div class="container py-5">
-    <!-- Auth Section -->
-    <div id="authSection" class="auth-container">
-      <div id="loginTab" class="card">
-        <div class="card-header text-center">Sign In</div>
-        <div class="card-body p-4">
-          <div class="mb-3">
-            <input type="email" id="loginEmail" class="form-control" placeholder="Email">
-          </div>
-          <div class="mb-3">
-            <input type="password" id="loginPassword" class="form-control" placeholder="Password">
-          </div>
-          <button id="loginBtn" class="btn btn-primary w-100 py-2 mb-3">Sign In</button>
-          <div class="text-center">
-            <button id="showRegister" class="btn btn-link p-0">Create Account</button>
-            <span class="mx-2">•</span>
-            <button id="showReset" class="btn btn-link p-0">Forgot Password?</button>
-          </div>
+  <div id="app" class="app" hidden>
+    <aside class="sidebar">
+      <div class="brand-lockup compact">
+        <span class="brand-mark" aria-hidden="true">EF</span>
+        <div>
+          <p class="eyebrow">Events Factory</p>
+          <strong>Ops calendar</strong>
         </div>
       </div>
+      <nav class="side-nav" aria-label="Main">
+        <button type="button" class="nav-btn is-active" data-view="calendar">Calendar</button>
+        <button type="button" class="nav-btn" data-view="board">Orders</button>
+        <button type="button" class="nav-btn" data-view="events">Events</button>
+        <button type="button" class="nav-btn" data-view="team" data-manager-only>Team</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div id="session-card" class="session-card"></div>
+        <button type="button" id="sign-out" class="btn btn-ghost">Sign out</button>
+      </div>
+    </aside>
 
-      <div id="registerTab" class="card d-none">
-        <div class="card-header text-center">Create Account</div>
-        <div class="card-body p-4">
-          <div class="mb-3">
-            <input type="email" id="registerEmail" class="form-control" placeholder="Email">
+    <div class="workspace">
+      <header class="topbar">
+        <button type="button" id="menu-toggle" class="icon-btn mobile-only" aria-label="Open menu">☰</button>
+        <div>
+          <p id="view-kicker" class="eyebrow">Calendar</p>
+          <h2 id="view-title">Production month</h2>
+        </div>
+        <div class="topbar-actions">
+          <label class="search-wrap">
+            <span class="sr-only">Search</span>
+            <input id="search" type="search" placeholder="Search orders, events, people" />
+          </label>
+          <button type="button" id="new-event-btn" class="btn btn-ghost" data-manager-only>+ Event</button>
+          <button type="button" id="new-order-btn" class="btn btn-gold" data-manager-only>+ Issue order</button>
+        </div>
+      </header>
+
+      <section id="view-calendar" class="view is-visible">
+        <div class="calendar-toolbar">
+          <div class="month-nav">
+            <button type="button" id="prev-period" class="icon-btn" aria-label="Previous">‹</button>
+            <h3 id="period-label">September 2026</h3>
+            <button type="button" id="next-period" class="icon-btn" aria-label="Next">›</button>
+            <button type="button" id="today-btn" class="btn btn-ghost">Today</button>
           </div>
-          <div class="mb-3">
-            <input type="password" id="registerPassword" class="form-control" placeholder="Password (min 6 chars)">
-          </div>
-          <button id="registerBtn" class="btn btn-success w-100 py-2 mb-3">Create Account</button>
-          <div class="text-center">
-            <button id="showLoginFromRegister" class="btn btn-link p-0">Back to Login</button>
+          <div class="toolbar-right">
+            <label class="filter-label">
+              Show
+              <select id="assignee-filter">
+                <option value="all">Everyone</option>
+              </select>
+            </label>
+            <div class="segmented" role="tablist" aria-label="Calendar range">
+              <button type="button" class="seg-btn is-active" data-range="month">Month</button>
+              <button type="button" class="seg-btn" data-range="week">Week</button>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div id="resetTab" class="card d-none">
-        <div class="card-header text-center">Reset Password</div>
-        <div class="card-body p-4">
-          <p class="text-muted mb-3">Enter your email for a reset link.</p>
-          <div class="mb-3">
-            <input type="email" id="resetEmail" class="form-control" placeholder="Email">
+        <div class="calendar-layout">
+          <div class="calendar-card">
+            <div class="dow-row" aria-hidden="true">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calendar-grid" class="calendar-grid"></div>
           </div>
-          <button id="resetBtn" class="btn btn-warning w-100 py-2 mb-3">Send Reset Link</button>
-          <div class="text-center">
-            <button id="showLoginFromReset" class="btn btn-link p-0">Back to Login</button>
-          </div>
+          <aside class="day-panel" aria-live="polite">
+            <div class="day-panel-head">
+              <p class="eyebrow">Selected day</p>
+              <h3 id="day-panel-title">Pick a date</h3>
+            </div>
+            <div id="day-panel-body" class="day-panel-body">
+              <p class="empty-hint">Choose a day to see events and orders.</p>
+            </div>
+          </aside>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Orders -->
-    <div id="ordersSection" class="d-none">
-      <div class="d-flex justify-content-between align-items-center mb-5">
-        <h2 class="fw-bold">My Orders</h2>
-        <button id="addOrderBtn" class="btn btn-success"><i class="bi bi-plus-circle me-2"></i> New Order</button>
-      </div>
-      <div id="ordersContainer" class="order-grid"></div>
+      <section id="view-board" class="view">
+        <div class="board-filters">
+          <button type="button" class="chip is-active" data-board-filter="all">All</button>
+          <button type="button" class="chip" data-board-filter="todo">To do</button>
+          <button type="button" class="chip" data-board-filter="in_progress">In progress</button>
+          <button type="button" class="chip" data-board-filter="done">Done</button>
+          <button type="button" class="chip" data-board-filter="blocked">Blocked</button>
+        </div>
+        <div id="board-columns" class="board-columns"></div>
+      </section>
+
+      <section id="view-events" class="view">
+        <div id="events-list" class="events-list"></div>
+      </section>
+
+      <section id="view-team" class="view">
+        <div class="team-layout">
+          <div id="team-list" class="team-list"></div>
+          <form id="add-member-form" class="panel-form">
+            <h3>Add crew</h3>
+            <p class="muted">They sign in with the email you set. Demo password is <code>demo</code>.</p>
+            <label>Name <input name="name" required placeholder="Priya Shah" /></label>
+            <label>Email <input name="email" type="email" required placeholder="priya@eventsfactory.studio" /></label>
+            <label>Title <input name="title" required placeholder="Stage manager" /></label>
+            <label>Role
+              <select name="role">
+                <option value="crew">Crew</option>
+                <option value="manager">Manager</option>
+              </select>
+            </label>
+            <button type="submit" class="btn btn-gold">Add to roster</button>
+          </form>
+        </div>
+      </section>
     </div>
   </div>
 
-  <!-- Modal -->
-  <div class="modal fade" id="addOrderModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-bold">New Order</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body pt-0">
-          <div class="mb-3">
-            <label class="form-label">Pickup Place</label>
-            <input type="text" id="pickupPlace" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Pickup Date</label>
-            <input type="date" id="pickupDate" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Pickup Time</label>
-            <input type="time" id="pickupTime" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Delivery Date</label>
-            <input type="date" id="deliveryDate" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Delivery Time</label>
-            <input type="time" id="deliveryTime" class="form-control" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Client Name</label>
-            <input type="text" id="clientName" class="form-control" required>
-          </div>
-        </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button id="saveOrderBtn" class="btn btn-primary">Save Order</button>
-        </div>
+  <div id="backdrop" class="backdrop" hidden></div>
+
+  <dialog id="order-modal" class="modal">
+    <form id="order-form" method="dialog">
+      <h3 id="order-modal-title">Issue order</h3>
+      <input type="hidden" name="id" />
+      <label>Order title
+        <input name="title" required placeholder="Rig front-of-house lighting" />
+      </label>
+      <label>Assign to
+        <select name="assigneeId" required></select>
+      </label>
+      <label>Event
+        <select name="eventId">
+          <option value="">No event — general ops</option>
+        </select>
+      </label>
+      <div class="form-row">
+        <label>Due date <input name="dueDate" type="date" required /></label>
+        <label>Time <input name="dueTime" type="time" /></label>
       </div>
-    </div>
-  </div>
+      <label>Priority
+        <select name="priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+          <option value="low">Low</option>
+        </select>
+      </label>
+      <label>Notes
+        <textarea name="details" rows="3" placeholder="Call time, vendor, what done looks like"></textarea>
+      </label>
+      <p id="order-form-error" class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save order</button>
+      </div>
+    </form>
+  </dialog>
 
-  <!-- Bootstrap Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <dialog id="event-modal" class="modal">
+    <form id="event-form" method="dialog">
+      <h3 id="event-modal-title">New event</h3>
+      <input type="hidden" name="id" />
+      <label>Event name
+        <input name="name" required placeholder="Harper & Cole wedding" />
+      </label>
+      <label>Client <input name="client" placeholder="Harper Cole" /></label>
+      <label>Venue <input name="venue" placeholder="The Glasshouse" /></label>
+      <div class="form-row">
+        <label>Start date <input name="date" type="date" required /></label>
+        <label>End date <input name="endDate" type="date" /></label>
+      </div>
+      <label>Type
+        <select name="type">
+          <option value="Wedding">Wedding</option>
+          <option value="Corporate">Corporate</option>
+          <option value="Festival">Festival</option>
+          <option value="Private">Private</option>
+          <option value="Exhibition">Exhibition</option>
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <label>Notes
+        <textarea name="notes" rows="3" placeholder="Load-in window, contacts, constraints"></textarea>
+      </label>
+      <p id="event-form-error" class="form-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-gold">Save event</button>
+      </div>
+    </form>
+  </dialog>
 
-  <!-- Firebase Modular SDK -->
-  <script type="module">
-    // ✅ CORRECT IMPORTS FOR MODULAR SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      updateDoc,
-      doc,
-      onSnapshot,
-      query,
-      where,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // ✅ YOUR CONFIG — NO CHANGES NEEDED
-    const firebaseConfig = {
-      apiKey: "AIzaSyAfkl5nqHc2ABz3VKi081KOLG8T0D8_Yh8",
-      authDomain: "order-pickup-a12f2.firebaseapp.com",
-      projectId: "order-pickup-a12f2",
-      storageBucket: "order-pickup-a12f2.firebasestorage.app",
-      messagingSenderId: "132551215111",
-      appId: "1:132551215111:web:9fab5609db392fe6edc2a2"
-    };
-
-    // ✅ INITIALIZE FIREBASE
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // DOM
-    const authSection = document.getElementById('authSection');
-    const ordersSection = document.getElementById('ordersSection');
-    const ordersContainer = document.getElementById('ordersContainer');
-    const userRoleDisplay = document.getElementById('userRoleDisplay');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const addOrderBtn = document.getElementById('addOrderBtn');
-
-    // Tabs
-    const loginTab = document.getElementById('loginTab');
-    const registerTab = document.getElementById('registerTab');
-    const resetTab = document.getElementById('resetTab');
-
-    // Inputs
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-    const registerEmail = document.getElementById('registerEmail');
-    const registerPassword = document.getElementById('registerPassword');
-    const resetEmail = document.getElementById('resetEmail');
-
-    let currentUser = null;
-    let isAdmin = false;
-
-    // Set today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('pickupDate').value = today;
-    document.getElementById('deliveryDate').value = today;
-
-    // Tab switching
-    document.getElementById('showRegister').onclick = () => {
-      loginTab.classList.add('d-none');
-      registerTab.classList.remove('d-none');
-    };
-    document.getElementById('showReset').onclick = () => {
-      loginTab.classList.add('d-none');
-      resetTab.classList.remove('d-none');
-    };
-    document.getElementById('showLoginFromRegister').onclick = () => {
-      registerTab.classList.add('d-none');
-      loginTab.classList.remove('d-none');
-    };
-    document.getElementById('showLoginFromReset').onclick = () => {
-      resetTab.classList.add('d-none');
-      loginTab.classList.remove('d-none');
-    };
-
-    // ✅ LOGIN — CORRECT MODULAR CALL
-    document.getElementById('loginBtn').onclick = async () => {
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value;
-      if (!email || !password) return alert('Fill all fields.');
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert('Login failed: ' + err.message);
-      }
-    };
-
-    // ✅ REGISTER
-    document.getElementById('registerBtn').onclick = async () => {
-      const email = registerEmail.value.trim();
-      const password = registerPassword.value;
-      if (!email || !password || password.length < 6) {
-        return alert('Email and password (6+ chars) required.');
-      }
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert('Account created! You are now signed in.');
-      } catch (err) {
-        alert('Registration failed: ' + err.message);
-      }
-    };
-
-    // ✅ PASSWORD RESET
-    document.getElementById('resetBtn').onclick = async () => {
-      const email = resetEmail.value.trim();
-      if (!email) return alert('Enter your email.');
-      try {
-        await sendPasswordResetEmail(auth, email);
-        alert('Reset email sent! Check inbox & spam.');
-        resetTab.classList.add('d-none');
-        loginTab.classList.remove('d-none');
-      } catch (err) {
-        alert('Reset failed: ' + err.message);
-      }
-    };
-
-    logoutBtn.onclick = () => signOut(auth);
-
-    // Modal
-    addOrderBtn.onclick = () => {
-      new bootstrap.Modal(document.getElementById('addOrderModal')).show();
-    };
-
-    // Save Order
-    document.getElementById('saveOrderBtn').onclick = async () => {
-      const pickupPlace = document.getElementById('pickupPlace').value.trim();
-      const pickupDate = document.getElementById('pickupDate').value;
-      const pickupTime = document.getElementById('pickupTime').value;
-      const deliveryDate = document.getElementById('deliveryDate').value;
-      const deliveryTime = document.getElementById('deliveryTime').value;
-      const clientName = document.getElementById('clientName').value.trim();
-
-      if (!pickupPlace || !pickupDate || !pickupTime || !deliveryDate || !deliveryTime || !clientName) {
-        return alert('All fields required.');
-      }
-
-      try {
-        await addDoc(collection(db, 'orders'), {
-          pickupPlace,
-          pickupDate,
-          pickupTime,
-          deliveryDate,
-          deliveryTime,
-          clientName,
-          status: 'pending',
-          createdAt: new Date(),
-          createdBy: currentUser.email
-        });
-        bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
-        // Reset form
-        document.querySelectorAll('#addOrderModal input').forEach(el => el.value = '');
-        document.getElementById('pickupDate').value = today;
-        document.getElementById('deliveryDate').value = today;
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    };
-
-    // Render orders
-    function renderOrder(order, id) {
-      const statusMap = {
-        pending: 'Pending',
-        on_way_pickup: 'On Way',
-        picked_up: 'Picked Up',
-        on_way_delivery: 'To Delivery',
-        delivered: 'Delivered',
-        cancelled: 'Cancelled',
-        returned: 'Returned'
-      };
-      const statusClass = `status-${order.status}`;
-      const roleTag = isAdmin ? 'role-admin' : 'role-client';
-
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <span class="role-tag ${roleTag}">${isAdmin ? 'Admin' : 'Client'}</span>
-        <div class="card-header">Order #${id.substring(0,8)}</div>
-        <div class="card-body p-4">
-          <p><strong>Client:</strong> ${order.clientName}</p>
-          <p><strong>Pickup:</strong> ${order.pickupPlace} • ${order.pickupDate} at ${order.pickupTime}</p>
-          <p><strong>Delivery:</strong> ${order.deliveryDate} at ${order.deliveryTime}</p>
-          <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${statusMap[order.status] || order.status}</span></p>
-          ${isAdmin ? renderStatusButtons(order.status, id) : ''}
-        </div>
-      `;
-      ordersContainer.appendChild(card);
-    }
-
-    function renderStatusButtons(status, id) {
-      const actions = [
-        { s: 'on_way_pickup', l: 'On Way' },
-        { s: 'picked_up', l: 'Picked Up' },
-        { s: 'on_way_delivery', l: 'To Delivery' },
-        { s: 'delivered', l: 'Delivered' },
-        { s: 'cancelled', l: 'Cancelled' },
-        { s: 'returned', l: 'Returned' }
-      ];
-      let html = '<div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">';
-      actions.forEach(a => {
-        const color = a.s === 'cancelled' ? '#ef4444' : a.s === 'returned' ? '#f97316' : '#4f46e5';
-        html += `<button class="btn btn-sm btn-status"
-                 style="background:${color};color:white"
-                 onclick="updateStatus('${id}', '${a.s}')">${a.l}</button>`;
-      });
-      html += '</div>';
-      return html;
-    }
-
-    // Global function for status update (since onclick in HTML)
-    window.updateStatus = async (orderId, status) => {
-      try {
-        await updateDoc(doc(db, 'orders', orderId), { status, updatedAt: new Date() });
-      } catch (err) {
-        alert('Update failed: ' + err.message);
-      }
-    };
-
-    function loadOrders() {
-      ordersContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-      const q = isAdmin
-        ? query(collection(db, 'orders'), orderBy('createdAt', 'desc'))
-        : query(collection(db, 'orders'), where('createdBy', '==', currentUser.email), orderBy('createdAt', 'desc'));
-
-      onSnapshot(q, (snapshot) => {
-        ordersContainer.innerHTML = '';
-        if (snapshot.empty) {
-          ordersContainer.innerHTML = `
-            <div class="col-12">
-              <div class="no-orders">
-                <i class="bi bi-inbox" style="font-size:3rem;color:#d1d5db"></i>
-                <h5 class="mt-3">No orders</h5>
-              </div>
-            </div>`;
-          return;
-        }
-        snapshot.forEach(doc => renderOrder(doc.data(), doc.id));
-      }, err => {
-        ordersContainer.innerHTML = `<div class="alert alert-danger">Error: ${err.message}</div>`;
-      });
-    }
-
-    // Auth state
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        isAdmin = user.email === 'info@llparcels.be';
-        userRoleDisplay.textContent = isAdmin ? 'Admin' : 'Client';
-        authSection.classList.add('d-none');
-        ordersSection.classList.remove('d-none');
-        loadOrders();
-      } else {
-        currentUser = null;
-        authSection.classList.remove('d-none');
-        ordersSection.classList.add('d-none');
-        userRoleDisplay.textContent = '';
-        loginTab.classList.remove('d-none');
-        registerTab.classList.add('d-none');
-        resetTab.classList.add('d-none');
-      }
-    });
-  </script>
+  <div id="toast" class="toast" hidden></div>
+  <script src="js/app.js"></script>
 </body>
 </html>
