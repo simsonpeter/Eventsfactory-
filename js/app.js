@@ -46,10 +46,10 @@
   };
 
   const VIEW_COPY = {
-    calendar: { kicker: "Calendar", title: "Production month" },
-    board: { kicker: "Orders", title: "What the floor owes today" },
-    events: { kicker: "Events", title: "Books & call sheets" },
-    team: { kicker: "Team", title: "Who takes the orders" },
+    calendar: { kicker: "Calendar", title: "Production month", short: "Production month" },
+    board: { kicker: "Orders", title: "What the floor owes today", short: "On the floor" },
+    events: { kicker: "Events", title: "Books & call sheets", short: "Call sheets" },
+    team: { kicker: "Team", title: "Who takes the orders", short: "Roster" },
   };
 
   const ui = {
@@ -328,17 +328,42 @@
     `;
   }
 
+  function formatDue(order) {
+    const today = toISODate(new Date());
+    const tomorrow = toISODate(addDays(new Date(), 1));
+    let day = formatShort(order.dueDate);
+    if (order.dueDate === today) day = "Today";
+    else if (order.dueDate === tomorrow) day = "Tomorrow";
+    return `${day}${order.dueTime ? " · " + order.dueTime : ""}`;
+  }
+
   function orderActions(order) {
     const canEdit = isManager();
     const canMove = isManager() || order.assigneeId === currentUser().id;
+    const manage = canEdit
+      ? `<span class="manage-btns">
+           <button type="button" class="mini-btn" data-edit-order="${esc(order.id)}">Edit</button>
+           <button type="button" class="mini-btn" data-delete-order="${esc(order.id)}">Remove</button>
+         </span>`
+      : "";
+    if (isNarrow()) {
+      const picker = canMove
+        ? `<label class="status-picker">
+            <span class="sr-only">Status</span>
+            <select data-status-select data-order="${esc(order.id)}">
+              ${STATUSES.map((s) => `<option value="${esc(s.id)}" ${s.id === order.status ? "selected" : ""}>${esc(s.label)}</option>`).join("")}
+            </select>
+          </label>`
+        : `<span class="tag ${esc(order.status)}">${esc(STATUS_LABEL[order.status] || order.status)}</span>`;
+      return `<div class="row-actions compact-actions">${picker}${manage}</div>`;
+    }
     const statusBtns = STATUSES.filter((s) => s.id !== order.status)
       .map((s) => `<button type="button" class="mini-btn" data-status="${s.id}" data-order="${esc(order.id)}">${esc(s.label)}</button>`)
       .join("");
     return `
       <div class="row-actions">
         ${canMove ? statusBtns : ""}
-        ${canEdit ? `<button type="button" class="mini-btn" data-edit-order="${esc(order.id)}">Edit</button>` : ""}
-        ${canEdit ? `<button type="button" class="mini-btn" data-delete-order="${esc(order.id)}">Remove</button>` : ""}
+        ${manage}
       </div>
     `;
   }
@@ -367,7 +392,7 @@
       els.periodLabel.textContent = `${start.toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
       VIEW_COPY.calendar.title = "Production week";
     }
-    if (ui.view === "calendar") els.viewTitle.textContent = VIEW_COPY.calendar.title;
+    if (ui.view === "calendar") els.viewTitle.textContent = isNarrow() ? VIEW_COPY.calendar.short : VIEW_COPY.calendar.title;
 
     els.calendarGrid.classList.toggle("is-week", ui.range === "week");
     document.querySelector(".calendar-card")?.classList.toggle("is-week", ui.range === "week");
@@ -455,8 +480,59 @@
     ].join("");
   }
 
+  function renderBoardFilters(allOrders) {
+    const labels = { all: "All", todo: "To do", in_progress: "Doing", done: "Done", blocked: "Blocked" };
+    document.querySelectorAll("[data-board-filter]").forEach((chip) => {
+      const key = chip.dataset.boardFilter;
+      const n = key === "all" ? allOrders.length : allOrders.filter((o) => o.status === key).length;
+      chip.textContent = `${labels[key] || key} ${n}`;
+      chip.classList.toggle("is-active", ui.boardFilter === key);
+    });
+  }
+
   function renderBoard() {
-    const orders = visibleOrders().filter((o) => ui.boardFilter === "all" || o.status === ui.boardFilter);
+    const allOrders = visibleOrders();
+    renderBoardFilters(allOrders);
+    const rank = { todo: 0, in_progress: 1, blocked: 2, done: 3 };
+    const orders = allOrders
+      .filter((o) => ui.boardFilter === "all" || o.status === ui.boardFilter)
+      .sort((a, b) => {
+        if (ui.boardFilter === "all") {
+          const byStatus = (rank[a.status] ?? 9) - (rank[b.status] ?? 9);
+          if (byStatus) return byStatus;
+        }
+        return `${a.dueDate}${a.dueTime || ""}`.localeCompare(`${b.dueDate}${b.dueTime || ""}`);
+      });
+
+    if (isNarrow()) {
+      els.boardColumns.className = "order-feed";
+      if (!orders.length) {
+        els.boardColumns.innerHTML = `<p class="empty-hint">No orders in this lane.</p>`;
+        return;
+      }
+      els.boardColumns.innerHTML = orders
+        .map((o) => {
+          const person = userById(o.assigneeId);
+          const event = eventById(o.eventId);
+          return `
+            <article class="order-card compact">
+              <div class="order-card-top">
+                <h4>${esc(o.title)}</h4>
+                <span class="tag ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span>
+              </div>
+              <p class="muted">${esc(formatDue(o))}${event ? " · " + esc(event.name) : ""}</p>
+              <div class="order-card-foot">
+                ${person ? `<span class="who"><span class="avatar" style="width:22px;height:22px;font-size:0.6rem;background:${esc(person.color)}">${esc(initials(person.name))}</span>${esc(person.name.split(" ")[0])}</span>` : ""}
+                <span class="tag ${esc(o.priority)}">${esc(o.priority)}</span>
+              </div>
+              ${orderActions(o)}
+            </article>`;
+        })
+        .join("");
+      return;
+    }
+
+    els.boardColumns.className = "board-columns";
     const columns = STATUSES.map((status) => {
       const cards = orders
         .filter((o) => o.status === status.id)
@@ -466,7 +542,7 @@
           return `
             <article class="order-card">
               <h4>${esc(o.title)}</h4>
-              <p class="muted">${esc(formatShort(o.dueDate))}${o.dueTime ? " · " + esc(o.dueTime) : ""}${event ? " · " + esc(event.name) : ""}</p>
+              <p class="muted">${esc(formatDue(o))}${event ? " · " + esc(event.name) : ""}</p>
               <div class="meta">
                 ${person ? `<span class="avatar" style="width:22px;height:22px;font-size:0.6rem;background:${esc(person.color)}">${esc(initials(person.name))}</span>` : ""}
                 <span class="tag ${esc(o.priority)}">${esc(o.priority)}</span>
@@ -614,7 +690,8 @@
     });
     const copy = VIEW_COPY[view];
     els.viewKicker.textContent = copy.kicker;
-    els.viewTitle.textContent = copy.title;
+    els.viewTitle.textContent = isNarrow() ? copy.short : copy.title;
+    document.body.dataset.view = view;
     closeMenu();
     if (view === "calendar") renderCalendar();
     if (view === "board") renderBoard();
@@ -717,6 +794,20 @@
     if (isNarrow()) {
       document.querySelector(".day-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  });
+
+  document.body.addEventListener("change", (event) => {
+    const picker = event.target.closest("[data-status-select]");
+    if (!picker) return;
+    const order = db.orders.find((o) => o.id === picker.dataset.order);
+    if (!order) return;
+    if (!isManager() && order.assigneeId !== currentUser().id) return;
+    order.status = picker.value;
+    saveDb();
+    const y = window.scrollY;
+    renderAll();
+    window.scrollTo(0, y);
+    toast(`Order marked ${STATUS_LABEL[order.status].toLowerCase()}`);
   });
 
   document.body.addEventListener("click", (event) => {
