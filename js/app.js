@@ -252,6 +252,7 @@
     document.querySelectorAll("[data-manager-only]").forEach((node) => {
       node.hidden = !isManager();
     });
+    if (!isManager() && ui.view === "team") setView("calendar");
   }
 
   function renderSession() {
@@ -524,6 +525,9 @@
   function showApp() {
     els.loginScreen.hidden = true;
     els.app.hidden = false;
+    ui.search = "";
+    if (els.search) els.search.value = "";
+    setView("calendar");
     renderAll();
   }
 
