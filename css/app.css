@@ -641,7 +641,7 @@ input:focus, select:focus, textarea:focus {
     min-height: 36px;
     padding: 0.2rem 0.5rem;
   }
-  .edit-title { text-decoration: underline; text-decoration-color: rgba(212, 175, 55, 0.35); text-underline-offset: 3px; }
+  .edit-title { text-decoration: none; }
   .status-picker {
     flex: 1;
     min-width: 0;
