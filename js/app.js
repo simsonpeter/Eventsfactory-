@@ -651,6 +651,7 @@
   els.signOut.addEventListener("click", () => {
     db.sessionUserId = null;
     saveDb();
+    closeMenu();
     showLogin();
   });
 
