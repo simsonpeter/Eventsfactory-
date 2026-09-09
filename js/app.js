@@ -39,8 +39,10 @@
     eventForm: document.getElementById("event-form"),
     toast: document.getElementById("toast"),
     menuToggle: document.getElementById("menu-toggle"),
+    menuClose: document.getElementById("menu-close"),
     sidebar: document.querySelector(".sidebar"),
     backdrop: document.getElementById("backdrop"),
+    fabOrder: document.getElementById("fab-order"),
   };
 
   const VIEW_COPY = {
@@ -61,6 +63,15 @@
   };
 
   let db = loadDb();
+
+  function isNarrow() {
+    return window.matchMedia("(max-width: 800px)").matches;
+  }
+
+  function closeMenu() {
+    els.sidebar.classList.remove("open");
+    els.backdrop.hidden = true;
+  }
 
   function uid(prefix) {
     return `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
@@ -359,6 +370,7 @@
     if (ui.view === "calendar") els.viewTitle.textContent = VIEW_COPY.calendar.title;
 
     els.calendarGrid.classList.toggle("is-week", ui.range === "week");
+    document.querySelector(".calendar-card")?.classList.toggle("is-week", ui.range === "week");
     els.calendarGrid.innerHTML = days
       .map((day) => {
         const iso = toISODate(day);
@@ -377,6 +389,18 @@
           }),
         ];
         if (overflow) chips.push(`<span class="more-count">+${overflow} more</span>`);
+        const dots = [
+          ...dayEvents.map(() => "#d4af37"),
+          ...dayOrders.map((o) => userById(o.assigneeId)?.color || "#9aa3b0"),
+        ];
+        const extraDots = Math.max(0, dots.length - 4);
+        const dotHtml = dots.length
+          ? `<span class="dot-row">${dots
+              .slice(0, 4)
+              .map((color) => `<i class="dot" style="background:${esc(color)}"></i>`)
+              .join("")}${extraDots ? `<span class="more-count">+</span>` : ""}</span>`
+          : "";
+        const weekday = day.toLocaleDateString(undefined, { weekday: "short" });
         const cls = [
           "day-cell",
           inMonth ? "" : "is-outside",
@@ -386,7 +410,8 @@
           .filter(Boolean)
           .join(" ");
         return `<button type="button" class="${cls}" data-date="${iso}" aria-label="${esc(formatLong(iso))}">
-          <span class="day-num">${day.getDate()}</span>
+          <span class="day-num">${ui.range === "week" ? `<strong>${esc(weekday)}</strong> ` : ""}${day.getDate()}</span>
+          ${dotHtml}
           ${chips.join("")}
         </button>`;
       })
@@ -581,7 +606,7 @@
 
   function setView(view) {
     ui.view = view;
-    document.querySelectorAll(".nav-btn").forEach((btn) => {
+    document.querySelectorAll(".nav-btn, .tab-btn").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.view === view);
     });
     document.querySelectorAll(".view").forEach((section) => {
@@ -590,12 +615,12 @@
     const copy = VIEW_COPY[view];
     els.viewKicker.textContent = copy.kicker;
     els.viewTitle.textContent = copy.title;
-    els.sidebar.classList.remove("open");
-    els.backdrop.hidden = true;
+    closeMenu();
     if (view === "calendar") renderCalendar();
     if (view === "board") renderBoard();
     if (view === "events") renderEvents();
     if (view === "team") renderTeam();
+    if (isNarrow()) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function shiftPeriod(dir) {
@@ -626,6 +651,7 @@
   els.signOut.addEventListener("click", () => {
     db.sessionUserId = null;
     saveDb();
+    closeMenu();
     showLogin();
   });
 
@@ -634,9 +660,20 @@
     if (!btn || btn.hidden) return;
     setView(btn.dataset.view);
   });
+  document.getElementById("mobile-nav").addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-view]");
+    if (!btn || btn.hidden) return;
+    setView(btn.dataset.view);
+  });
 
   els.newOrderBtn.addEventListener("click", () => openOrderModal());
+  els.fabOrder.addEventListener("click", () => openOrderModal());
   els.newEventBtn.addEventListener("click", () => openEventModal());
+  document.getElementById("sidebar-new-event").addEventListener("click", () => {
+    closeMenu();
+    openEventModal();
+  });
+  document.getElementById("mobile-new-event").addEventListener("click", () => openEventModal());
   document.getElementById("prev-period").addEventListener("click", () => shiftPeriod(-1));
   document.getElementById("next-period").addEventListener("click", () => shiftPeriod(1));
   document.getElementById("today-btn").addEventListener("click", () => {
@@ -677,6 +714,9 @@
     if (!cell) return;
     ui.selectedDate = cell.dataset.date;
     renderCalendar();
+    if (isNarrow()) {
+      document.querySelector(".day-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   });
 
   document.body.addEventListener("click", (event) => {
@@ -832,9 +872,15 @@
     els.sidebar.classList.toggle("open", open);
     els.backdrop.hidden = !open;
   });
-  els.backdrop.addEventListener("click", () => {
-    els.sidebar.classList.remove("open");
-    els.backdrop.hidden = true;
+  els.menuClose.addEventListener("click", closeMenu);
+  els.backdrop.addEventListener("click", closeMenu);
+
+  let resizeTick;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTick);
+    resizeTick = setTimeout(() => {
+      if (currentUser() && ui.view === "calendar") renderCalendar();
+    }, 160);
   });
 
   if (db.sessionUserId && currentUser()) {

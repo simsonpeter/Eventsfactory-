@@ -8,7 +8,7 @@ Open `index.html` in a browser, or from this folder run:
 python3 -m http.server 8080
 ```
 
-Then visit [http://localhost:8080](http://localhost:8080).
+Then visit [http://localhost:8080](http://localhost:8080). Phones and tablets use a compact calendar, bottom tabs, and a + Order button. Add the page to your home screen if you want it full-screen.
 
 ## Demo desks
 
