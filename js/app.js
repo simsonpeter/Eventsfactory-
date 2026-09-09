@@ -1,5 +1,4 @@
 (() => {
-  const STORAGE_KEY = "eventsfactory.v1";
   const STATUSES = [
     { id: "todo", label: "To do" },
     { id: "in_progress", label: "In progress" },
@@ -7,7 +6,8 @@
     { id: "blocked", label: "Blocked" },
   ];
   const STATUS_LABEL = Object.fromEntries(STATUSES.map((s) => [s.id, s.label]));
-  const CREW_COLORS = ["#d4af37", "#6ea8fe", "#f0a36b", "#7bdcb5", "#d4a5c9", "#e07a6a", "#b8a1ff"];
+
+  const db = { me: null, users: [], events: [], orders: [] };
 
   const els = {
     loginScreen: document.getElementById("login-screen"),
@@ -62,8 +62,6 @@
     boardFilter: "all",
   };
 
-  let db = loadDb();
-
   function isNarrow() {
     return window.matchMedia("(max-width: 800px)").matches;
   }
@@ -73,8 +71,36 @@
     els.backdrop.hidden = true;
   }
 
-  function uid(prefix) {
-    return `${prefix}_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+  async function api(path, opts = {}) {
+    const res = await fetch(path, {
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+      ...opts,
+    });
+    return res;
+  }
+
+  function applyPayload(payload) {
+    db.me = payload.me || null;
+    db.users = payload.users || [];
+    db.events = payload.events || [];
+    db.orders = payload.orders || [];
+  }
+
+  async function mutate(path, opts = {}) {
+    try {
+      const res = await api(path, opts);
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast(payload.error || "Save failed");
+        return false;
+      }
+      applyPayload(payload);
+      return true;
+    } catch {
+      toast("Can't reach the desk database. Run npm start.");
+      return false;
+    }
   }
 
   function toISODate(date) {
@@ -141,54 +167,8 @@
       .join("");
   }
 
-  function loadDb() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {
-      /* fall through to seed */
-    }
-    return seedDb();
-  }
-
-  function saveDb() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  }
-
-  function seedDb() {
-    const today = new Date();
-    const iso = (offset) => toISODate(addDays(today, offset));
-    const users = [
-      { id: "u_maya", name: "Maya Chen", email: "maya@eventsfactory.studio", password: "demo", role: "manager", title: "Operations manager", color: CREW_COLORS[0] },
-      { id: "u_alex", name: "Alex Rivera", email: "alex@eventsfactory.studio", password: "demo", role: "crew", title: "Lighting lead", color: CREW_COLORS[1] },
-      { id: "u_jordan", name: "Jordan Blake", email: "jordan@eventsfactory.studio", password: "demo", role: "crew", title: "Catering captain", color: CREW_COLORS[2] },
-      { id: "u_sam", name: "Sam Okonkwo", email: "sam@eventsfactory.studio", password: "demo", role: "crew", title: "Logistics", color: CREW_COLORS[3] },
-      { id: "u_riley", name: "Riley Chen", email: "riley@eventsfactory.studio", password: "demo", role: "crew", title: "Floral & décor", color: CREW_COLORS[4] },
-    ];
-    const events = [
-      { id: "e_wedding", name: "Harper & Cole wedding", client: "Harper Cole", venue: "The Glasshouse", date: iso(3), endDate: iso(3), type: "Wedding", notes: "Ceremony 4pm. Load-in from 8am.", createdBy: "u_maya" },
-      { id: "e_summit", name: "Apex Tech Summit", client: "Apex Labs", venue: "Harbor Convention Center", date: iso(9), endDate: iso(10), type: "Corporate", notes: "Two-day keynote + expo floor.", createdBy: "u_maya" },
-      { id: "e_gallery", name: "Luna Gallery opening", client: "Luna Arts", venue: "Luna Gallery", date: iso(17), endDate: iso(17), type: "Exhibition", notes: "Invite-only preview at 6pm.", createdBy: "u_maya" },
-    ];
-    const orders = [
-      { id: "o1", title: "Confirm florist delivery window", details: "Call Bloom & Branch. Need peonies on site by 10:00.", eventId: "e_wedding", assigneeId: "u_riley", dueDate: iso(0), dueTime: "09:30", priority: "high", status: "in_progress", createdBy: "u_maya" },
-      { id: "o2", title: "Pull Glasshouse lighting plot", details: "Front-of-house warm wash, no color on vows.", eventId: "e_wedding", assigneeId: "u_alex", dueDate: iso(0), dueTime: "11:00", priority: "urgent", status: "todo", createdBy: "u_maya" },
-      { id: "o3", title: "Van load-in checklist", details: "China, linens, signage, spare gaffer.", eventId: "e_wedding", assigneeId: "u_sam", dueDate: iso(2), dueTime: "16:00", priority: "normal", status: "todo", createdBy: "u_maya" },
-      { id: "o4", title: "Menu tasting with couple", details: "Vegetarian main + late-night grilled cheese.", eventId: "e_wedding", assigneeId: "u_jordan", dueDate: iso(1), dueTime: "14:00", priority: "high", status: "todo", createdBy: "u_maya" },
-      { id: "o5", title: "Ceremony seating chart print", details: "Final headcount 148. Escort cards in navy.", eventId: "e_wedding", assigneeId: "u_riley", dueDate: iso(3), dueTime: "08:00", priority: "normal", status: "todo", createdBy: "u_maya" },
-      { id: "o6", title: "Stage power drop for keynote", details: "32A to center. Confirm house electrician.", eventId: "e_summit", assigneeId: "u_alex", dueDate: iso(8), dueTime: "10:00", priority: "urgent", status: "todo", createdBy: "u_maya" },
-      { id: "o7", title: "Expo booth load map", details: "Dock 3 overnight. No forklift after 07:00.", eventId: "e_summit", assigneeId: "u_sam", dueDate: iso(8), dueTime: "18:00", priority: "high", status: "todo", createdBy: "u_maya" },
-      { id: "o8", title: "Speaker green-room catering", details: "Coffee + fruit. No nuts. 40 covers.", eventId: "e_summit", assigneeId: "u_jordan", dueDate: iso(9), dueTime: "07:30", priority: "normal", status: "todo", createdBy: "u_maya" },
-      { id: "o9", title: "Gallery lighting focus", details: "No UV on oils. Dim to 40% for preview.", eventId: "e_gallery", assigneeId: "u_alex", dueDate: iso(16), dueTime: "13:00", priority: "normal", status: "todo", createdBy: "u_maya" },
-      { id: "o10", title: "Collect radios from last gig", details: "6 packs still at The Glasshouse office.", eventId: "", assigneeId: "u_sam", dueDate: iso(0), dueTime: "15:00", priority: "low", status: "done", createdBy: "u_maya" },
-    ];
-    const seeded = { users, events, orders, sessionUserId: null };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-    return seeded;
-  }
-
   function currentUser() {
-    return db.users.find((u) => u.id === db.sessionUserId) || null;
+    return db.me;
   }
 
   function isManager() {
@@ -282,7 +262,7 @@
     els.demoAccounts.innerHTML = db.users
       .map(
         (u) => `
-        <button type="button" class="demo-btn" data-demo="${esc(u.id)}">
+        <button type="button" class="demo-btn" data-demo-email="${esc(u.email)}">
           <span>${esc(u.name)}<br><small>${esc(u.title)}</small></span>
           <small>${esc(u.role)}</small>
         </button>`
@@ -631,21 +611,37 @@
     renderAll();
   }
 
-  function showLogin() {
+  async function showLogin() {
     els.app.hidden = true;
     els.loginScreen.hidden = false;
-    renderDemoAccounts();
+    try {
+      const res = await api("/api/desks");
+      if (!res.ok) throw new Error("desk");
+      db.users = await res.json();
+      db.me = null;
+      renderDemoAccounts();
+    } catch {
+      els.demoAccounts.innerHTML = "";
+      setError(els.loginError, "Can't reach the desk database. Run npm start.");
+    }
   }
 
-  function signIn(email, password) {
-    const user = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (!user) return false;
-    db.sessionUserId = user.id;
-    saveDb();
-    ui.assigneeFilter = user.role === "manager" ? "all" : user.id;
-    showApp();
-    toast(`Signed in as ${user.name}`);
-    return true;
+  async function signIn(email, password) {
+    try {
+      const res = await api("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) return payload.error || "Those credentials do not match a desk account.";
+      applyPayload(payload);
+      ui.assigneeFilter = currentUser().role === "manager" ? "all" : currentUser().id;
+      showApp();
+      toast(`Signed in as ${currentUser().name}`);
+      return true;
+    } catch {
+      return "Can't reach the desk database. Run npm start.";
+    }
   }
 
   function openOrderModal(order) {
@@ -714,24 +710,24 @@
     renderCalendar();
   }
 
-  els.loginForm.addEventListener("submit", (event) => {
+  els.loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const ok = signIn(els.loginEmail.value.trim(), els.loginPassword.value);
-    setError(els.loginError, ok ? "" : "Those credentials do not match a desk account.");
+    const result = await signIn(els.loginEmail.value.trim(), els.loginPassword.value);
+    setError(els.loginError, result === true ? "" : result);
   });
 
-  els.demoAccounts.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-demo]");
+  els.demoAccounts.addEventListener("click", async (event) => {
+    const btn = event.target.closest("[data-demo-email]");
     if (!btn) return;
-    const user = userById(btn.dataset.demo);
-    if (user) signIn(user.email, user.password);
+    const result = await signIn(btn.dataset.demoEmail, "demo");
+    setError(els.loginError, result === true ? "" : result);
   });
 
-  els.signOut.addEventListener("click", () => {
-    db.sessionUserId = null;
-    saveDb();
+  els.signOut.addEventListener("click", async () => {
+    await api("/api/logout", { method: "POST" }).catch(() => {});
+    db.me = null;
     closeMenu();
-    showLogin();
+    await showLogin();
   });
 
   document.querySelector(".side-nav").addEventListener("click", (event) => {
@@ -745,12 +741,11 @@
     setView(btn.dataset.view);
   });
 
-  document.getElementById("delete-order-btn").addEventListener("click", () => {
+  document.getElementById("delete-order-btn").addEventListener("click", async () => {
     if (!isManager()) return;
     const id = document.getElementById("delete-order-btn").dataset.deleteOrder;
     if (!id) return;
-    db.orders = db.orders.filter((o) => o.id !== id);
-    saveDb();
+    if (!(await mutate(`/api/orders/${id}`, { method: "DELETE" }))) return;
     els.orderModal.close();
     renderAll();
     toast("Order removed");
@@ -808,30 +803,28 @@
     }
   });
 
-  document.body.addEventListener("change", (event) => {
+  document.body.addEventListener("change", async (event) => {
     const picker = event.target.closest("[data-status-select]");
     if (!picker) return;
     const order = db.orders.find((o) => o.id === picker.dataset.order);
     if (!order) return;
     if (!isManager() && order.assigneeId !== currentUser().id) return;
-    order.status = picker.value;
-    saveDb();
+    if (!(await mutate(`/api/orders/${order.id}`, { method: "PATCH", body: JSON.stringify({ status: picker.value }) }))) return;
     const y = window.scrollY;
     renderAll();
     window.scrollTo(0, y);
-    toast(`Order marked ${STATUS_LABEL[order.status].toLowerCase()}`);
+    toast(`Order marked ${STATUS_LABEL[picker.value].toLowerCase()}`);
   });
 
-  document.body.addEventListener("click", (event) => {
+  document.body.addEventListener("click", async (event) => {
     const statusBtn = event.target.closest("[data-status]");
     if (statusBtn) {
       const order = db.orders.find((o) => o.id === statusBtn.dataset.order);
       if (!order) return;
       if (!isManager() && order.assigneeId !== currentUser().id) return;
-      order.status = statusBtn.dataset.status;
-      saveDb();
+      if (!(await mutate(`/api/orders/${order.id}`, { method: "PATCH", body: JSON.stringify({ status: statusBtn.dataset.status }) }))) return;
       renderAll();
-      toast(`Order marked ${STATUS_LABEL[order.status].toLowerCase()}`);
+      toast(`Order marked ${STATUS_LABEL[statusBtn.dataset.status].toLowerCase()}`);
       return;
     }
     const editOrder = event.target.closest("[data-edit-order]");
@@ -841,8 +834,7 @@
     }
     const deleteOrder = event.target.closest("[data-delete-order]");
     if (deleteOrder && isManager()) {
-      db.orders = db.orders.filter((o) => o.id !== deleteOrder.dataset.deleteOrder);
-      saveDb();
+      if (!(await mutate(`/api/orders/${deleteOrder.dataset.deleteOrder}`, { method: "DELETE" }))) return;
       renderAll();
       toast("Order removed");
       return;
@@ -854,12 +846,7 @@
     }
     const deleteEvent = event.target.closest("[data-delete-event]");
     if (deleteEvent && isManager()) {
-      const id = deleteEvent.dataset.deleteEvent;
-      db.events = db.events.filter((e) => e.id !== id);
-      db.orders.forEach((o) => {
-        if (o.eventId === id) o.eventId = "";
-      });
-      saveDb();
+      if (!(await mutate(`/api/events/${deleteEvent.dataset.deleteEvent}`, { method: "DELETE" }))) return;
       renderAll();
       toast("Event removed");
     }
@@ -872,7 +859,7 @@
     });
   });
 
-  els.orderForm.addEventListener("submit", (event) => {
+  els.orderForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!isManager()) return;
     const form = els.orderForm;
@@ -882,6 +869,7 @@
       return;
     }
     const payload = {
+      id: form.id.value || undefined,
       title,
       assigneeId: form.assigneeId.value,
       eventId: form.eventId.value,
@@ -890,27 +878,15 @@
       priority: form.priority.value,
       details: form.details.value.trim(),
     };
-    if (form.id.value) {
-      const existing = db.orders.find((o) => o.id === form.id.value);
-      Object.assign(existing, payload);
-      toast("Order updated");
-    } else {
-      db.orders.push({
-        id: uid("o"),
-        status: "todo",
-        createdBy: currentUser().id,
-        ...payload,
-      });
-      toast("Order issued");
-    }
-    saveDb();
+    if (!(await mutate("/api/orders", { method: "POST", body: JSON.stringify(payload) }))) return;
+    toast(form.id.value ? "Order updated" : "Order issued");
     els.orderModal.close();
     ui.selectedDate = payload.dueDate;
     ui.cursor = startOfMonth(parseISODate(payload.dueDate));
     renderAll();
   });
 
-  els.eventForm.addEventListener("submit", (event) => {
+  els.eventForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!isManager()) return;
     const form = els.eventForm;
@@ -920,6 +896,7 @@
       return;
     }
     const payload = {
+      id: form.id.value || undefined,
       name,
       client: form.client.value.trim(),
       venue: form.venue.value.trim(),
@@ -932,39 +909,28 @@
       setError(document.getElementById("event-form-error"), "End date cannot be before start date.");
       return;
     }
-    if (form.id.value) {
-      Object.assign(db.events.find((e) => e.id === form.id.value), payload);
-      toast("Event updated");
-    } else {
-      db.events.push({ id: uid("e"), createdBy: currentUser().id, ...payload });
-      toast("Event added");
-    }
-    saveDb();
+    if (!(await mutate("/api/events", { method: "POST", body: JSON.stringify(payload) }))) return;
+    toast(form.id.value ? "Event updated" : "Event added");
     els.eventModal.close();
     ui.selectedDate = payload.date;
     ui.cursor = startOfMonth(parseISODate(payload.date));
     renderAll();
   });
 
-  els.addMemberForm.addEventListener("submit", (event) => {
+  els.addMemberForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!isManager()) return;
     const data = new FormData(els.addMemberForm);
-    const email = String(data.get("email")).trim().toLowerCase();
-    if (db.users.some((u) => u.email.toLowerCase() === email)) {
-      toast("That email is already on the roster");
-      return;
-    }
-    db.users.push({
-      id: uid("u"),
-      name: String(data.get("name")).trim(),
-      email,
-      password: "demo",
-      role: String(data.get("role")),
-      title: String(data.get("title")).trim(),
-      color: CREW_COLORS[db.users.length % CREW_COLORS.length],
+    const ok = await mutate("/api/users", {
+      method: "POST",
+      body: JSON.stringify({
+        name: String(data.get("name")).trim(),
+        email: String(data.get("email")).trim().toLowerCase(),
+        title: String(data.get("title")).trim(),
+        role: String(data.get("role")),
+      }),
     });
-    saveDb();
+    if (!ok) return;
     els.addMemberForm.reset();
     renderAll();
     toast("Crew added — they sign in with password demo");
@@ -986,10 +952,18 @@
     }, 160);
   });
 
-  if (db.sessionUserId && currentUser()) {
-    showApp();
-  } else {
-    db.sessionUserId = null;
-    showLogin();
-  }
+  (async () => {
+    try {
+      const res = await api("/api/state");
+      if (res.ok) {
+        applyPayload(await res.json());
+        ui.assigneeFilter = currentUser().role === "manager" ? "all" : currentUser().id;
+        showApp();
+        return;
+      }
+    } catch {
+      /* show login */
+    }
+    await showLogin();
+  })();
 })();
