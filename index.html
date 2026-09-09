@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Events Factory — Crew Orders & Calendar</title>
   <meta name="description" content="Managers issue orders to crew. Calendar and board for live-event production." />
+  <meta name="theme-color" content="#0e1217" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -54,12 +58,15 @@
 
   <div id="app" class="app" hidden>
     <aside class="sidebar">
-      <div class="brand-lockup compact">
-        <span class="brand-mark" aria-hidden="true">EF</span>
-        <div>
-          <p class="eyebrow">Events Factory</p>
-          <strong>Ops calendar</strong>
+      <div class="sidebar-head">
+        <div class="brand-lockup compact">
+          <span class="brand-mark" aria-hidden="true">EF</span>
+          <div>
+            <p class="eyebrow">Events Factory</p>
+            <strong>Ops calendar</strong>
+          </div>
         </div>
+        <button type="button" id="menu-close" class="icon-btn mobile-only" aria-label="Close menu">✕</button>
       </div>
       <nav class="side-nav" aria-label="Main">
         <button type="button" class="nav-btn is-active" data-view="calendar">Calendar</button>
@@ -69,6 +76,7 @@
       </nav>
       <div class="sidebar-foot">
         <div id="session-card" class="session-card"></div>
+        <button type="button" id="sidebar-new-event" class="btn btn-ghost mobile-only" data-manager-only>+ Event</button>
         <button type="button" id="sign-out" class="btn btn-ghost">Sign out</button>
       </div>
     </aside>
@@ -85,8 +93,8 @@
             <span class="sr-only">Search</span>
             <input id="search" type="search" placeholder="Search orders, events, people" />
           </label>
-          <button type="button" id="new-event-btn" class="btn btn-ghost" data-manager-only>+ Event</button>
-          <button type="button" id="new-order-btn" class="btn btn-gold" data-manager-only>+ Issue order</button>
+          <button type="button" id="new-event-btn" class="btn btn-ghost desktop-action" data-manager-only>+ Event</button>
+          <button type="button" id="new-order-btn" class="btn btn-gold desktop-action" data-manager-only>+ Issue order</button>
         </div>
       </header>
 
@@ -114,7 +122,13 @@
         <div class="calendar-layout">
           <div class="calendar-card">
             <div class="dow-row" aria-hidden="true">
-              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+              <span><i class="dow-full">Sun</i><i class="dow-short">S</i></span>
+              <span><i class="dow-full">Mon</i><i class="dow-short">M</i></span>
+              <span><i class="dow-full">Tue</i><i class="dow-short">T</i></span>
+              <span><i class="dow-full">Wed</i><i class="dow-short">W</i></span>
+              <span><i class="dow-full">Thu</i><i class="dow-short">T</i></span>
+              <span><i class="dow-full">Fri</i><i class="dow-short">F</i></span>
+              <span><i class="dow-full">Sat</i><i class="dow-short">S</i></span>
             </div>
             <div id="calendar-grid" class="calendar-grid"></div>
           </div>
@@ -142,6 +156,7 @@
       </section>
 
       <section id="view-events" class="view">
+        <button type="button" id="mobile-new-event" class="btn btn-gold mobile-only full-btn" data-manager-only>+ New event</button>
         <div id="events-list" class="events-list"></div>
       </section>
 
@@ -165,6 +180,26 @@
         </div>
       </section>
     </div>
+
+    <nav id="mobile-nav" class="mobile-nav" aria-label="Primary">
+      <button type="button" class="tab-btn is-active" data-view="calendar">
+        <span class="tab-icon" aria-hidden="true">▦</span>
+        Calendar
+      </button>
+      <button type="button" class="tab-btn" data-view="board">
+        <span class="tab-icon" aria-hidden="true">☰</span>
+        Orders
+      </button>
+      <button type="button" class="tab-btn" data-view="events">
+        <span class="tab-icon" aria-hidden="true">◆</span>
+        Events
+      </button>
+      <button type="button" class="tab-btn" data-view="team" data-manager-only>
+        <span class="tab-icon" aria-hidden="true">●</span>
+        Team
+      </button>
+    </nav>
+    <button type="button" id="fab-order" class="fab" data-manager-only>+ Order</button>
   </div>
 
   <div id="backdrop" class="backdrop" hidden></div>
