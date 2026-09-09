@@ -355,7 +355,7 @@
             </select>
           </label>`
         : `<span class="tag ${esc(order.status)}">${esc(STATUS_LABEL[order.status] || order.status)}</span>`;
-      return `<div class="row-actions compact-actions">${picker}${manage}</div>`;
+      return `<div class="row-actions compact-actions">${picker}</div>`;
     }
     const statusBtns = STATUSES.filter((s) => s.id !== order.status)
       .map((s) => `<button type="button" class="mini-btn" data-status="${s.id}" data-order="${esc(order.id)}">${esc(s.label)}</button>`)
@@ -517,15 +517,14 @@
           return `
             <article class="order-card compact">
               <div class="order-card-top">
-                <h4>${esc(o.title)}</h4>
-                <span class="tag ${esc(o.status)}">${esc(STATUS_LABEL[o.status] || o.status)}</span>
+                <h4 ${isManager() ? `class="edit-title" data-edit-order="${esc(o.id)}"` : ""}>${esc(o.title)}</h4>
+                <span class="tag ${esc(o.priority)}">${esc(o.priority)}</span>
               </div>
               <p class="muted">${esc(formatDue(o))}${event ? " · " + esc(event.name) : ""}</p>
               <div class="order-card-foot">
                 ${person ? `<span class="who"><span class="avatar" style="width:22px;height:22px;font-size:0.6rem;background:${esc(person.color)}">${esc(initials(person.name))}</span>${esc(person.name.split(" ")[0])}</span>` : ""}
-                <span class="tag ${esc(o.priority)}">${esc(o.priority)}</span>
+                ${orderActions(o)}
               </div>
-              ${orderActions(o)}
             </article>`;
         })
         .join("");
@@ -662,6 +661,9 @@
     els.orderForm.dueTime.value = order?.dueTime || "";
     els.orderForm.priority.value = order?.priority || "normal";
     els.orderForm.details.value = order?.details || "";
+    const deleteBtn = document.getElementById("delete-order-btn");
+    deleteBtn.hidden = !order || !isManager();
+    deleteBtn.dataset.deleteOrder = order?.id || "";
     els.orderModal.showModal();
   }
 
@@ -743,6 +745,16 @@
     setView(btn.dataset.view);
   });
 
+  document.getElementById("delete-order-btn").addEventListener("click", () => {
+    if (!isManager()) return;
+    const id = document.getElementById("delete-order-btn").dataset.deleteOrder;
+    if (!id) return;
+    db.orders = db.orders.filter((o) => o.id !== id);
+    saveDb();
+    els.orderModal.close();
+    renderAll();
+    toast("Order removed");
+  });
   els.newOrderBtn.addEventListener("click", () => openOrderModal());
   els.fabOrder.addEventListener("click", () => openOrderModal());
   els.newEventBtn.addEventListener("click", () => openEventModal());
